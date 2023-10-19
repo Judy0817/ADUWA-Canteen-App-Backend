@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
 import mysql.connector
 from config import MYSQL_CONFIG
+from flask_login import current_user
+
 
 app = Flask(__name__)
 
@@ -77,6 +79,81 @@ def update_record(id):
         return jsonify({'error': f"Database error: {error}"}), 500
 
 
+
+# Initialize the total price
+total_price = 0.0
+
+@app.route('/add_to_cart', methods=['GET'])
+def add_to_cart():
+    global total_price
+
+    try:
+        item_price = float(request.args.get('price'))
+
+        if item_price is not None:
+            total_price += item_price
+            return jsonify({'message': 'Item added to cart successfully'})
+        else:
+            return jsonify({'error': 'Invalid item data'}), 400
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/get_total_price', methods=['GET'])
+def get_total_price():
+    return jsonify({'total_price': total_price})
+
+
+@app.route('/store_user_data', methods=['GET'])
+def insert_user():
+    # data = request.get_json()
+    # title = data.get('title')
+    username = request.args.get('username', type=str)
+    email = request.args.get('email', type=str)
+
+    # description = data.get('description')
+    mycursor = db.cursor()
+    sql = "INSERT INTO users (username, email) VALUES (%s, %s)"
+    val = (username,email)
+    mycursor.execute(sql, val)
+    db.commit()
+    return "User inserted."
+
+@app.route('/retrieve_username', methods=['GET'])
+def retrieve_username():
+    try:
+        email = request.args.get('email')  # Get the email from the query parameters
+        if email is not None:
+            mycursor = db.cursor()
+            sql = "SELECT username FROM users WHERE email = %s"  # Modify the SQL query to filter by email
+            mycursor.execute(sql, (email,))
+            row = mycursor.fetchone()
+            if row is not None:
+                username =  [row[0].title()]
+  # Capitalize the first letter of each word
+                return jsonify(username)
+            else:
+                return jsonify({'error': 'User not found for the provided email'}), 404
+        else:
+            return jsonify({'error': 'Missing email parameter'}), 400
+
+    except mysql.connector.Error as error:
+        return jsonify({'error': f"Database error: {error}"}), 500
+
+@app.route('/insert_bucket', methods=['GET'])
+def insert_bucket():
+    Username = request.args.get('Username', type=str,default=None)
+    FoodName = request.args.get('FoodName', type=str)
+    Price = request.args.get('Price', type=float)
+    Quantity=request.args.get('Quantity', type=int,default=None)
+    SubTotal = request.args.get('SubTotal', type=float,default=None)
+
+    mycursor = db.cursor()
+    sql = "INSERT INTO Bucket (Username,FoodName,Price,Quantity,SubTotal) VALUES (%s, %s,%s,%s,%s)"
+    val = (Username,FoodName,Price,Quantity,SubTotal)
+    mycursor.execute(sql, val)
+    db.commit()
+    return "Record inserted."
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=9090)
