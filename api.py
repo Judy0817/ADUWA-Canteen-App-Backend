@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 import mysql.connector
 from config import MYSQL_CONFIG
 from flask_login import current_user
+from flask import Flask, session
 
 
 app = Flask(__name__)
@@ -99,9 +100,9 @@ def add_to_cart():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/get_total_price', methods=['GET'])
-def get_total_price():
-    return jsonify({'total_price': total_price})
+# @app.route('/get_total_price', methods=['GET'])
+# def get_total_price():
+#     return jsonify({'total_price': total_price})
 
 
 @app.route('/store_user_data', methods=['GET'])
@@ -154,6 +155,59 @@ def insert_bucket():
     mycursor.execute(sql, val)
     db.commit()
     return "Record inserted."
+
+
+@app.route('/retrieve_bucket', methods=['GET'])
+def retrieve_bucket():
+    try:
+        mycursor = db.cursor()
+        sql = "SELECT * FROM Bucket"
+        mycursor.execute(sql)
+        data = mycursor.fetchall()
+        result = [{'OrderID': row[0], 'Username': row[1], 'FoodName':row[2] ,'Price': row[3],'Quantity': row[4],'SubTotal': row[5],'Status': row[6]} for row in data]
+
+        return jsonify(result)
+
+    except mysql.connector.Error as error:
+        return jsonify({'error': f"Database error: {error}"}), 500
+    
+
+@app.route('/update_bucket/<int:OrderID>', methods=['GET'])
+def update_bucket(OrderID):
+    try:
+        # Get the updated title and description from the request
+        Quantity = request.args.get('Quantity', type=str)
+        SubTotal = request.args.get('SubTotal', type=float)
+
+        mycursor = db.cursor()
+        sql = "UPDATE Bucket SET Quantity = %s, SubTotal = %s WHERE OrderID = %s"
+        val = (Quantity, SubTotal,OrderID)
+        mycursor.execute(sql, val)
+        db.commit()
+
+        if mycursor.rowcount > 0:
+            return jsonify({'message': f'Record with ID {OrderID} updated successfully'})
+        else:
+            return jsonify({'message': f'Record with ID {OrderID} not found'}), 404
+
+    except mysql.connector.Error as error:
+        return jsonify({'error': f"Database error: {error}"}), 500
+    
+
+@app.route('/get_total_price2', methods=['GET'])
+def get_total_price2():
+    try:
+
+        mycursor = db.cursor()
+        sql = "SELECT SUM(SubTotal) AS total_price FROM Bucket"
+        mycursor.execute(sql)
+        
+        # Fetch the result
+        result = mycursor.fetchone()
+        total_price = result[0] if result else 0.0
+        return jsonify({"total_price": total_price})
+    except Exception as e:
+        return jsonify({"error": str(e)})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=9090)
