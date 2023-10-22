@@ -3,6 +3,8 @@ import mysql.connector
 from config import MYSQL_CONFIG
 from flask_login import current_user
 from flask import Flask, session
+import time
+
 
 
 app = Flask(__name__)
@@ -33,7 +35,7 @@ def retrieve_data():
         mycursor.execute(sql)
         data = mycursor.fetchall()
         result = [{'id': row[0], 'name': row[1], 'price':row[2] ,'description': row[3]} for row in data]
-
+        mycursor.close()
         return jsonify(result)
 
     except mysql.connector.Error as error:
@@ -79,9 +81,6 @@ def update_record(id):
     except mysql.connector.Error as error:
         return jsonify({'error': f"Database error: {error}"}), 500
 
-
-
-# Initialize the total price
 total_price = 0.0
 
 @app.route('/add_to_cart', methods=['GET'])
@@ -99,10 +98,6 @@ def add_to_cart():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-# @app.route('/get_total_price', methods=['GET'])
-# def get_total_price():
-#     return jsonify({'total_price': total_price})
 
 
 @app.route('/store_user_data', methods=['GET'])
@@ -131,7 +126,7 @@ def retrieve_username():
             row = mycursor.fetchone()
             if row is not None:
                 username =  [row[0].title()]
-  # Capitalize the first letter of each word
+                mycursor.close()
                 return jsonify(username)
             else:
                 return jsonify({'error': 'User not found for the provided email'}), 404
@@ -165,7 +160,7 @@ def retrieve_bucket():
         mycursor.execute(sql)
         data = mycursor.fetchall()
         result = [{'OrderID': row[0], 'Username': row[1], 'FoodName':row[2] ,'Price': row[3],'Quantity': row[4],'SubTotal': row[5],'Status': row[6]} for row in data]
-
+        mycursor.close()
         return jsonify(result)
 
     except mysql.connector.Error as error:
@@ -205,9 +200,14 @@ def get_total_price2():
         # Fetch the result
         result = mycursor.fetchone()
         total_price = result[0] if result else 0.0
+        mycursor.close()
         return jsonify({"total_price": total_price})
     except Exception as e:
         return jsonify({"error": str(e)})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=9090)
+
+
+while True:
+    time.sleep(1)
