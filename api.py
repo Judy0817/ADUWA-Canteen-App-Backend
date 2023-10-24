@@ -125,7 +125,9 @@ def retrieve_username():
             mycursor.execute(sql, (email,))
             row = mycursor.fetchone()
             if row is not None:
-                username =  [row[0].title()]
+                username = row[0]
+                # Remove double quotation marks from the username
+                username = username.replace('"', '')
                 mycursor.close()
                 return jsonify(username)
             else:
@@ -143,10 +145,10 @@ def insert_bucket():
     Price = request.args.get('Price', type=float)
     Quantity=request.args.get('Quantity', type=int,default=None)
     SubTotal = request.args.get('SubTotal', type=float,default=None)
-
+    Status = "Pending"
     mycursor = db.cursor()
-    sql = "INSERT INTO Bucket (Username,FoodName,Price,Quantity,SubTotal) VALUES (%s, %s,%s,%s,%s)"
-    val = (Username,FoodName,Price,Quantity,SubTotal)
+    sql = "INSERT INTO Bucket (Username,FoodName,Price,Quantity,SubTotal,Status) VALUES (%s, %s,%s,%s,%s,%s)"
+    val = (Username,FoodName,Price,Quantity,SubTotal,Status)
     mycursor.execute(sql, val)
     db.commit()
     return "Record inserted."
@@ -155,9 +157,10 @@ def insert_bucket():
 @app.route('/retrieve_bucket', methods=['GET'])
 def retrieve_bucket():
     try:
+        username = request.args.get('Username')
         mycursor = db.cursor()
-        sql = "SELECT * FROM Bucket"
-        mycursor.execute(sql)
+        sql = "SELECT * FROM Bucket WHERE Status = 'Pending' AND Username = %s"
+        mycursor.execute(sql, (username,))
         data = mycursor.fetchall()
         result = [{'OrderID': row[0], 'Username': row[1], 'FoodName':row[2] ,'Price': row[3],'Quantity': row[4],'SubTotal': row[5],'Status': row[6]} for row in data]
         mycursor.close()
@@ -204,10 +207,31 @@ def get_total_price2():
         return jsonify({"total_price": total_price})
     except Exception as e:
         return jsonify({"error": str(e)})
+    
+
+
+@app.route('/delete_bucket/<int:id>', methods=['GET'])
+def delete_bucket(id):
+    try:
+        mycursor = db.cursor()
+        sql = "DELETE FROM Bucket WHERE OrderID = %s"
+        val = (id,)
+        mycursor.execute(sql, val)
+        db.commit()
+        if mycursor.rowcount > 0:
+            return jsonify({'message': f'Record with ID {id} deleted successfully'})
+        else:
+            return jsonify({'message': f'Record with ID {id} not found'}), 404
+
+    except mysql.connector.Error as error:
+        return jsonify({'error': f"Database error: {error}"}), 500
+
+
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=9090)
 
 
 while True:
-    time.sleep(1)
+    time.sleep(2)
