@@ -4,6 +4,10 @@
  <img src="https://github.com/Judy0817/university_canteen/assets/119217708/9d2ab838-13d7-4465-bb97-97520d1d2892" width="400" align="center">
 </div>
 
+ADUWA Frontend : https://github.com/Judy0817/ADUWA-Canteen-App-FrontEnd
+
+ADUWA Backend : https://github.com/Judy0817/ADUWA-Canteen-App-Backend
+
 The ADUWA-University Canteen App addresses the pressing issue of students' accessibility to breakfast and lunch options in Sri Lankan universities. Focused on enhancing the dining experience, this mobile application serves both university students and canteen owners. Canteen owners are required to register, enabling them to update their available food lists, minimizing food wastage by preparing according to demand. Students, authenticated through their university email addresses, can efficiently order meals from diverse canteens, eliminating the need for unnecessary exploration. A key feature is the app's ability to suggest canteen locations based on users' past food preferences, optimizing their choices. The project aims to streamline the food supply chain, reduce queues, and ultimately cater to the culinary needs of university students across Sri Lanka.
 
 ## Interfaces
